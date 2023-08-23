@@ -44,7 +44,7 @@ class Line:
         canvas.pack()
 
 class Cell:
-    def __init__(self, x1, y1, x2, y2, window):
+    def __init__(self, x1, y1, x2, y2, color, window):
         self.has_left_wall = True
         self.has_right_wall = True
         self.has_top_wall = True
@@ -53,6 +53,7 @@ class Cell:
         self.__y1 = y1
         self.__x2 = x2
         self.__y2 = y2
+        self.color = color
         self.__window = window
 
     def get_center(self):
@@ -82,8 +83,8 @@ class Cell:
             self.__y1 + 1,
             self.__x2 - 1,
             self.__y2 - 1,
-            fill="orange",
-            outline="orange",
+            fill=self.color,
+            outline=self.color,
         )
 
     def draw_move(self, to_cell, undo=False):
@@ -111,12 +112,13 @@ class Cell:
         )
 
 class Maze:
-    def __init__(self, x, y, num_rows, num_cols, window):
+    def __init__(self, x, y, num_rows, num_cols, color, window):
         self.x = x
         self.y = y
         self.num_rows = num_rows
         self.num_cols = num_cols
         self.__window = window
+        self.color = color
         self.__cells = []
 
     def create_and_draw(self):
@@ -129,7 +131,16 @@ class Maze:
         for x in range(self.x, avail_width, cell_width):
             column = []
             for y in range(self.y, avail_height, cell_height):
-                column.append(Cell(x, y, x + cell_width, y + cell_height, self.__window))
+                column.append(
+                    Cell(
+                        x,
+                        y,
+                        x + cell_width,
+                        y + cell_height,
+                        self.color,
+                        self.__window,
+                    )
+                )
             self.__cells.append(column)
 
         # draw + animate cells
@@ -141,7 +152,7 @@ class Maze:
 
 def main():
     window = Window(800, 600)
-    maze = Maze(25, 25, 20, 20, window)
+    maze = Maze(25, 25, 10, 10, "pink", window)
     maze.create_and_draw()
 
 
