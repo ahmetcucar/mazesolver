@@ -44,11 +44,11 @@ class Line:
         canvas.pack()
 
 class Cell:
-    def __init__(self, left, right, top, bottom, x1, y1, x2, y2, window):
-        self.has_left_wall = left
-        self.has_right_wall = right
-        self.has_top_wall = top
-        self.has_bottom_wall = bottom
+    def __init__(self, x1, y1, x2, y2, window):
+        self.has_left_wall = True
+        self.has_right_wall = True
+        self.has_top_wall = True
+        self.has_bottom_wall = True
         self.__x1 = x1
         self.__y1 = y1
         self.__x2 = x2
@@ -76,6 +76,16 @@ class Cell:
                 Line(Point(self.__x1, self.__y2), Point(self.__x2, self.__y2)), "black"
             )
 
+        # fill the color of the cell with no edge color
+        self.__window._Window__canvas.create_rectangle(
+            self.__x1 + 1,
+            self.__y1 + 1,
+            self.__x2 - 1,
+            self.__y2 - 1,
+            fill="orange",
+            outline="orange",
+        )
+
     def draw_move(self, to_cell, undo=False):
         # determine the positioning of to_cell relative to self and see if
         # there is a wall blocking us
@@ -100,31 +110,39 @@ class Cell:
             Line(self.get_center(), to_cell.get_center()), color
         )
 
+class Maze:
+    def __init__(self, x, y, num_rows, num_cols, window):
+        self.x = x
+        self.y = y
+        self.num_rows = num_rows
+        self.num_cols = num_cols
+        self.__window = window
+        self.__cells = []
+
+    def create_and_draw(self):
+        avail_width = self.__window._Window__width - (self.x * 2)
+        avail_height = self.__window._Window__height - (self.y * 2)
+        cell_width =  avail_width // self.num_cols
+        cell_height = avail_height // self.num_rows
+
+        # create cells
+        for x in range(self.x, avail_width, cell_width):
+            column = []
+            for y in range(self.y, avail_height, cell_height):
+                column.append(Cell(x, y, x + cell_width, y + cell_height, self.__window))
+            self.__cells.append(column)
+
+        # draw + animate cells
+        for column in self.__cells:
+            for cell in column:
+                cell.draw()
+                self.__window.redraw()
+                self.__window._Window__root.after(1)
 
 def main():
     window = Window(800, 600)
-
-    # create the cells to fill the window, each having any number of walls
-    cells = []
-    cell_width = 200
-    cell_height = 200
-    for x in range(0, window._Window__width, cell_width):
-        for y in range(0, window._Window__height, cell_height):
-            cells.append(
-                Cell(
-                    True,
-                    True,
-                    True,
-                    True,
-                    x,
-                    y,
-                    x + cell_width,
-                    y + cell_height,
-                    window,
-                )
-            )
-    for cell in cells:
-        cell.draw()
+    maze = Maze(25, 25, 20, 20, window)
+    maze.create_and_draw()
 
 
     window.wait_for_close()
