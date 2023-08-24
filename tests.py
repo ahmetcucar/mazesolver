@@ -20,18 +20,30 @@ class Test(unittest.TestCase):
     # MAZE TESTS
 
     def test_maze_create_cells(self):
+        num_cols = 12
+        num_rows = 10
+        m1 = Maze(0, 0, num_rows, num_cols, "white", None)
+        m1.create()
+        print(f"cols: {len(m1.cells)}, rows: {len(m1.cells[0])}")
+        self.assertEqual(
+            len(m1.cells),
+            num_cols,
+        )
+        self.assertEqual(
+            len(m1.cells[0]),
+            num_rows,
+        )
+
+    def test_maze_break_entrance_and_exit(self):
         window = Window(800, 600)
         num_cols = 12
         num_rows = 10
         m1 = Maze(0, 0, num_rows, num_cols, "white", window)
-        self.assertEqual(
-            m1.num_cols,
-            num_cols,
-        )
-        self.assertEqual(
-            m1.num_rows,
-            num_rows,
-        )
+        m1.create()
+        m1.break_entrance_and_exit()
+        self.assertFalse(m1.cells[0][0].has_left_wall)
+        self.assertFalse(m1.cells[-1][-1].has_right_wall)
+        window.close()
 
 if __name__ == "__main__":
     unittest.main()

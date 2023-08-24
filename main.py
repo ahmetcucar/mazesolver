@@ -42,12 +42,12 @@ class Line:
 
     def draw(self, canvas, color):
         canvas.create_line(
-            self.start.x, self.start.y, self.end.x, self.end.y, fill=color, width=2
+            self.start.x, self.start.y, self.end.x, self.end.y, fill=color, width=4
         )
         canvas.pack()
 
 class Cell:
-    def __init__(self, x1, y1, x2, y2, color, window):
+    def __init__(self, x1, y1, x2, y2, color, window=None):
         self.has_left_wall = True
         self.has_right_wall = True
         self.has_top_wall = True
@@ -63,22 +63,12 @@ class Cell:
         return Point((self.__x1 + self.__x2) / 2, (self.__y1 + self.__y2) / 2)
 
     def draw(self):
-        if self.has_left_wall:
-            self.__window.draw_line(
-                Line(Point(self.__x1, self.__y1), Point(self.__x1, self.__y2)), "black"
-            )
-        if self.has_right_wall:
-            self.__window.draw_line(
-                Line(Point(self.__x2, self.__y1), Point(self.__x2, self.__y2)), "black"
-            )
-        if self.has_top_wall:
-            self.__window.draw_line(
-                Line(Point(self.__x1, self.__y1), Point(self.__x2, self.__y1)), "black"
-            )
-        if self.has_bottom_wall:
-            self.__window.draw_line(
-                Line(Point(self.__x1, self.__y2), Point(self.__x2, self.__y2)), "black"
-            )
+        self.check_window()
+
+        top_left = Point(self.__x1, self.__y1)
+        top_right = Point(self.__x2, self.__y1)
+        bottom_left = Point(self.__x1, self.__y2)
+        bottom_right = Point(self.__x2, self.__y2)
 
         # fill the color of the cell with no edge color
         self.__window._Window__canvas.create_rectangle(
@@ -90,7 +80,28 @@ class Cell:
             outline=self.color,
         )
 
+        # draw the walls, depending on whether they exist or not
+        self.__window.draw_line(
+            Line(top_left, bottom_left),
+            "black" if self.has_left_wall else self.color
+        )
+        self.__window.draw_line(
+            Line(top_right, bottom_right),
+            "black" if self.has_right_wall else self.color
+        )
+        self.__window.draw_line(
+            Line(top_left, top_right),
+            "black" if self.has_top_wall else self.color
+        )
+        self.__window.draw_line(
+            Line(bottom_left, bottom_right),
+            "black" if self.has_bottom_wall else self.color
+        )
+
+
     def draw_move(self, to_cell, undo=False):
+        self.check_window()
+
         # determine the positioning of to_cell relative to self and see if
         # there is a wall blocking us
         x_diff = to_cell.get_center().x - self.get_center().x
@@ -114,21 +125,31 @@ class Cell:
             Line(self.get_center(), to_cell.get_center()), color
         )
 
+    def check_window(self):
+        if self.__window is None:
+            raise Exception("Cell must have a window")
+
 class Maze:
-    def __init__(self, x, y, num_rows, num_cols, color, window):
+    def __init__(self, x, y, num_rows, num_cols, color, window=None):
         self.x = x
         self.y = y
         self.num_rows = num_rows
         self.num_cols = num_cols
         self.__window = window
         self.color = color
-        self.__cells = []
+        self.cells = []
 
-    def create_and_draw(self):
-        avail_width = self.__window._Window__width - (self.x * 2)
-        avail_height = self.__window._Window__height - (self.y * 2)
-        cell_width =  avail_width // self.num_cols
-        cell_height = avail_height // self.num_rows
+    def create(self):
+        if self.__window:
+            avail_width = self.__window._Window__width - (self.x * 2)
+            avail_height = self.__window._Window__height - (self.y * 2)
+            cell_width =  avail_width // self.num_cols
+            cell_height = avail_height // self.num_rows
+        else:
+            cell_width = 20
+            cell_height = 20
+            avail_width = self.num_cols * cell_width
+            avail_height = self.num_rows * cell_height
 
         # create cells
         for x in range(self.x, avail_width, cell_width):
@@ -144,21 +165,40 @@ class Maze:
                         self.__window,
                     )
                 )
-            self.__cells.append(column)
+            self.cells.append(column)
+
+    def draw(self):
+        self.check_window()
 
         # draw + animate cells
-        for column in self.__cells:
+        for column in self.cells:
             for cell in column:
                 cell.draw()
                 self.__window.redraw()
                 self.__window._Window__root.after(1)
 
+    def break_entrance_and_exit(self):
+        self.check_window()
+
+        # see if we have multiple rows and columns
+        if len(self.cells) > 0 and len(self.cells[0]) > 0:
+            self.cells[0][0].has_left_wall = False
+            self.cells[-1][-1].has_right_wall = False
+            self.cells[0][0].draw()
+            self.cells[-1][-1].draw()
+
+    def check_window(self):
+        if self.__window is None:
+            raise Exception("Maze must have a window")
+
 def main():
     window = Window(800, 600)
-    maze = Maze(25, 25, 10, 10, "pink", window)
-    maze.create_and_draw()
+    maze = Maze(20, 20, 12, 10, "pink", window)
+    maze.create()
+    maze.draw()
+    maze.break_entrance_and_exit()
 
 
     window.wait_for_close()
 
-main()
+# main()
