@@ -224,6 +224,8 @@ class Maze:
             return True
 
         neighbors = self.__get_neighbors(r, c)
+        # arrange them in order of closest to end
+        neighbors.sort(key=lambda x: abs(x[0] - (self.num_rows - 1)) + abs(x[1] - (self.num_cols - 1)))
         for neighbor in neighbors:
             nr, nc = neighbor
             if not self.cells[nr][nc].visited and not self.__has_wall(r, c, nr, nc):
@@ -354,8 +356,8 @@ class Maze:
 
 # TODO: allow for customization within terminal
 def main():
-    window = Window(1200, 1200)
-    maze = Maze(20, 20, 10, 10, "#B7B7B7", None, window)
+    window = Window(1300, 1300)
+    maze = Maze(20, 20, 20, 20, "#B7B7B7", None, window)
     maze.create()
     maze.draw()
 
