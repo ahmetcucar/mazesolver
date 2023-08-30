@@ -22,9 +22,8 @@ class Test(unittest.TestCase):
     def test_maze_create_cells(self):
         num_cols = 12
         num_rows = 10
-        m1 = Maze(0, 0, num_rows, num_cols, "white", None)
+        m1 = Maze(0, 0, num_rows, num_cols, "white")
         m1.create()
-        print(f"cols: {len(m1.cells)}, rows: {len(m1.cells[0])}")
         self.assertEqual(
             len(m1.cells),
             num_cols,
@@ -36,13 +35,54 @@ class Test(unittest.TestCase):
 
     def test_maze_break_entrance_and_exit(self):
         window = Window(800, 600)
-        num_cols = 12
-        num_rows = 10
-        m1 = Maze(0, 0, num_rows, num_cols, "white", window)
+        m1 = Maze(0, 0, 10, 12, "white", None, window)
         m1.create()
         m1.break_entrance_and_exit()
         self.assertFalse(m1.cells[0][0].has_left_wall)
         self.assertFalse(m1.cells[-1][-1].has_right_wall)
+        window.close()
+
+    def test_maze_get_neighbors(self):
+        m1 = Maze(0, 0, 10, 12, "white")
+        m1.create()
+        neighbors = m1._Maze__get_neighbors(0, 0)
+        self.assertEqual(len(neighbors), 2)
+        self.assertEqual(neighbors[0],(1, 0))
+        self.assertEqual(neighbors[1], (0, 1))
+
+        neighbors = m1._Maze__get_neighbors(1, 1)
+        self.assertEqual(len(neighbors), 4)
+        self.assertEqual(neighbors[0], (0, 1))
+        self.assertEqual(neighbors[1], (2, 1))
+        self.assertEqual(neighbors[2], (1, 0))
+        self.assertEqual(neighbors[3], (1, 2))
+
+
+    def test_maze_break_wall(self):
+        window = Window(800, 600)
+        m1 = Maze(0, 0, 10, 12, "white", None, window)
+        m1.create()
+
+        # test breaking bottom wall
+        m1._Maze__break_wall(0, 0, 1, 0)
+        self.assertFalse(m1.cells[0][0].has_bottom_wall)
+        self.assertFalse(m1.cells[1][0].has_top_wall)
+
+        # test breaking top wall
+        m1._Maze__break_wall(1, 0, 0, 0)
+        self.assertFalse(m1.cells[1][0].has_top_wall)
+        self.assertFalse(m1.cells[0][0].has_bottom_wall)
+
+        # test breaking right wall
+        m1._Maze__break_wall(0, 0, 0, 1)
+        self.assertFalse(m1.cells[0][0].has_right_wall)
+        self.assertFalse(m1.cells[0][1].has_left_wall)
+
+        # test breaking left wall
+        m1._Maze__break_wall(0, 1, 0, 0)
+        self.assertFalse(m1.cells[0][1].has_left_wall)
+        self.assertFalse(m1.cells[0][0].has_right_wall)
+
         window.close()
 
 if __name__ == "__main__":
