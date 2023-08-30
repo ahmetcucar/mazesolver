@@ -181,7 +181,6 @@ class Maze:
         # draw + animate cells
         for r in range(len(self.cells)):
             for c in range(len(self.cells[r])):
-                print(f"drawing cell {r}, {c}")
                 self.cells[r][c].draw()
                 # self.__window._Window__root.after(5)
 
@@ -195,6 +194,7 @@ class Maze:
             random.randint(0, self.num_cols - 1),
             color if color else "white",
         )
+        self.__reset_visited()
 
 
     def __break_entrance_and_exit(self):
@@ -278,9 +278,18 @@ class Maze:
             neighbors.append((row, col + 1))
         return neighbors
 
+
+    def __reset_visited(self):
+        for r in range(len(self.cells)):
+            for c in range(len(self.cells[r])):
+                self.cells[r][c].visited = False
+
+
     def __check_window(self):
         if self.__window is None:
             raise Exception("Maze must have a window")
+
+
 
     # check if given cell is in bounds of the maze
     def __in_bounds(self, r, c):
@@ -294,8 +303,6 @@ def main():
     maze.draw()
     maze.generate("#33AFFE")
 
-
-
     window.wait_for_close()
 
-main()
+# main()

@@ -26,18 +26,18 @@ class Test(unittest.TestCase):
         m1.create()
         self.assertEqual(
             len(m1.cells),
-            num_cols,
+            num_rows,
         )
         self.assertEqual(
             len(m1.cells[0]),
-            num_rows,
+            num_cols,
         )
 
     def test_maze_break_entrance_and_exit(self):
         window = Window(800, 600)
         m1 = Maze(0, 0, 10, 12, "white", None, window)
         m1.create()
-        m1.__break_entrance_and_exit()
+        m1._Maze__break_entrance_and_exit()
         self.assertFalse(m1.cells[0][0].has_left_wall)
         self.assertFalse(m1.cells[-1][-1].has_right_wall)
         window.close()
@@ -84,6 +84,27 @@ class Test(unittest.TestCase):
         self.assertFalse(m1.cells[0][0].has_right_wall)
 
         window.close()
+
+    def test_maze_in_bounds(self):
+        m1 = Maze(0, 0, 10, 12, "white")
+        m1.create()
+        self.assertTrue(m1._Maze__in_bounds(0, 0))
+        self.assertTrue(m1._Maze__in_bounds(9, 11))
+        self.assertFalse(m1._Maze__in_bounds(-1, 0))
+        self.assertFalse(m1._Maze__in_bounds(0, -1))
+        self.assertFalse(m1._Maze__in_bounds(10, 0))
+        self.assertFalse(m1._Maze__in_bounds(0, 12))
+
+    def test_maze_reset_visited(self):
+        window = Window(800, 600)
+        m1 = Maze(0, 0, 10, 12, "white", None, window)
+        m1.create()
+        m1.draw()
+        m1.generate()
+        m1._Maze__reset_visited()
+        for r in range(len(m1.cells)):
+            for c in range(len(m1.cells[r])):
+                self.assertFalse(m1.cells[r][c].visited)
 
 if __name__ == "__main__":
     unittest.main()
