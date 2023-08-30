@@ -102,7 +102,7 @@ class Cell:
         )
 
         self.__window.redraw()
-        self.__window._Window__root.after(1)
+        # self.__window._Window__root.after(1)
 
     def draw_move(self, to_cell, undo=False):
         self.check_window()
@@ -134,6 +134,8 @@ class Cell:
         if self.__window is None:
             raise Exception("Cell must have a window")
 
+
+#TODO: delete seed
 class Maze:
     def __init__(self, x, y, num_rows, num_cols, color, seed=None, window=None):
         self.x = x
@@ -157,7 +159,6 @@ class Maze:
             cell_height = 20
             avail_width = self.num_cols * cell_width
             avail_height = self.num_rows * cell_height
-
         # create cells
         for y in range(self.y, avail_height, cell_height):
             row = []
@@ -177,18 +178,27 @@ class Maze:
 
     def draw(self):
         self.__check_window()
-
         # draw + animate cells
         for r in range(len(self.cells)):
             for c in range(len(self.cells[r])):
                 print(f"drawing cell {r}, {c}")
                 self.cells[r][c].draw()
-                self.__window._Window__root.after(1)
+                # self.__window._Window__root.after(5)
 
 
-    def break_entrance_and_exit(self):
+    def generate(self, color=None):
         self.__check_window()
+        self.__break_entrance_and_exit()
+        # break walls dfs starting from random point
+        self.__break_walls_dfs(
+            random.randint(0, self.num_rows - 1),
+            random.randint(0, self.num_cols - 1),
+            color if color else "white",
+        )
 
+
+    def __break_entrance_and_exit(self):
+        self.__check_window()
         # see if we have multiple rows and columns
         if len(self.cells) > 0 and len(self.cells[0]) > 0:
             self.cells[0][0].has_left_wall = False
@@ -197,47 +207,40 @@ class Maze:
             self.cells[-1][-1].draw()
 
 
-    # # create the maze randomly, creating a path from the starting cell
-    # # to the ending cell
-    def break_walls_bfs(self):
-        if len(self.cells) == 0 or len(self.cells[0]) == 0:
-            raise Exception("Maze must have cells")
+    # generate a random maze using recursive backtracking
+    def __break_walls_dfs(self, r, c, color):
+        if not self.__in_bounds(r, c):
+            raise Exception("Cell must be in bounds")
 
-        # create a queue of cells to visit
-        queue = deque()
-        queue.append(tuple([0, 0]))
+        if self.cells[r][c].visited:
+            return
+        self.cells[r][c].visited = True
 
-        while queue:
-            r, c = queue.popleft()
-            print(r, c)
-            self.cells[r][c].visited = True
+        # get all the neighbors of the cell and randomly shuffle them
+        neighbors = self.__get_neighbors(r, c)
+        random.shuffle(neighbors)
 
-            # get all the neighbors of the cell and randomly shuffle them
-            neighbors = self.__get_neighbors(r, c)
-            random.shuffle(neighbors)
+        # for each neighbor, check if it has been visited
+        # if it has not been visited, break the wall between the
+        # current cell and the neighbor and enter the neighbor
+        for neighbor in neighbors:
+            nr, nc = neighbor
+            if not self.cells[nr][nc].visited:
+                self.__break_wall(r, c, nr, nc)
+                self.cells[r][c].color = color
+                self.cells[nr][nc].color = color
+                self.cells[r][c].draw()
+                self.cells[nr][nc].draw()
+                self.__break_walls_dfs(nr, nc, color)
 
-            # for each neighbor, check if it has been visited
-            # if it has not been visited, break the wall between the
-            # current cell and the neighbor and add the neighbor to the queue
-            for neighbor in neighbors:
-                nr, nc = neighbor
-                if not self.cells[nr][nc].visited:
-                    self.__break_wall(r, c, nr, nc)
-                    self.cells[nr][nc].visited = True
-                    print("   -  breaking wall: ", r, c, nr, nc)
-                    self.cells[r][c].draw()
-                    self.cells[nr][nc].draw()
-                    self.__window._Window__root.after(500)
-                    queue.append(neighbor)
+        # after all neighbors have been visited, change color back to white
+        self.cells[r][c].color = "white"
+        self.cells[r][c].draw()
 
 
     def __break_wall(self, r1, c1, r2, c2):
         # check if (r1, c1) and (r2, c2) are in bounds
-        if (r1 not in range(self.num_rows)
-            or r2 not in range(self.num_rows)
-            or c1 not in range(self.num_cols)
-            or c2 not in range(self.num_cols)
-        ):
+        if not self.__in_bounds(r1, c1) or not self.__in_bounds(r2, c2):
             raise Exception("Cells must be in bounds")
 
         # break the wall between the cells at (r1, c1) and (r2, c2)
@@ -279,16 +282,18 @@ class Maze:
         if self.__window is None:
             raise Exception("Maze must have a window")
 
+    # check if given cell is in bounds of the maze
+    def __in_bounds(self, r, c):
+        return r in range(self.num_rows) and c in range(self.num_cols)
+
 
 def main():
     window = Window(800, 800)
-    maze = Maze(20, 20, 10, 10, "white", None, window)
+    maze = Maze(20, 20, 20, 20, "#B7B7B7", None, window)
     maze.create()
     maze.draw()
-    maze.break_entrance_and_exit()
-    maze.break_walls_bfs()
-    # maze.traverse_and_break()
-    # maze.traverse_and_break2()
+    maze.generate("#33AFFE")
+
 
 
     window.wait_for_close()

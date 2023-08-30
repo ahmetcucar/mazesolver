@@ -37,7 +37,7 @@ class Test(unittest.TestCase):
         window = Window(800, 600)
         m1 = Maze(0, 0, 10, 12, "white", None, window)
         m1.create()
-        m1.break_entrance_and_exit()
+        m1.__break_entrance_and_exit()
         self.assertFalse(m1.cells[0][0].has_left_wall)
         self.assertFalse(m1.cells[-1][-1].has_right_wall)
         window.close()
