@@ -58,6 +58,24 @@ class Test(unittest.TestCase):
         self.assertEqual(neighbors[3], (1, 2))
 
 
+    def test_maze_has_wall(self):
+        m1 = Maze(0, 0, 10, 12, "white")
+        m1.create()
+
+        # destroy some walls and see if the method returns false
+        m1.cells[0][0].has_bottom_wall = False
+        m1.cells[1][0].has_top_wall = False
+        self.assertFalse(m1._Maze__has_wall(0, 0, 1, 0))
+
+        m1.cells[0][0].has_right_wall = False
+        m1.cells[0][1].has_left_wall = False
+        self.assertFalse(m1._Maze__has_wall(0, 0, 0, 1))
+
+        # see if method returns true when walls are not destroyed
+        self.assertTrue(m1._Maze__has_wall(2, 2, 2, 3))
+        self.assertTrue(m1._Maze__has_wall(2, 2, 3, 2))
+
+
     def test_maze_break_wall(self):
         window = Window(800, 600)
         m1 = Maze(0, 0, 10, 12, "white", None, window)

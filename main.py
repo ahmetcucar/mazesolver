@@ -130,6 +130,11 @@ class Cell:
             Line(self.get_center(), to_cell.get_center()), color
         )
 
+        # wait for a bit, but adjust the time depending on the amount of cells in the maze
+        self.__window._Window__root.after(75)
+        self.__window.redraw()
+
+
     def check_window(self):
         if self.__window is None:
             raise Exception("Cell must have a window")
@@ -197,6 +202,30 @@ class Maze:
         self.__reset_visited()
 
 
+    def solve(self):
+        return self.__solve_dfs(0, 0)
+
+    def __solve_dfs(self, r, c):
+        if not self.__in_bounds(r, c):
+            raise Exception("Cell must be in bounds")
+
+        self.cells[r][c].visited = True
+
+        # check if we are at the end
+        if r == self.num_rows - 1 and c == self.num_cols - 1:
+            return True
+
+        neighbors = self.__get_neighbors(r, c)
+        for neighbor in neighbors:
+            nr, nc = neighbor
+            if not self.cells[nr][nc].visited and not self.__has_wall(r, c, nr, nc):
+
+                self.cells[r][c].draw_move(self.cells[nr][nc])
+                if self.__solve_dfs(nr, nc):
+                    return True
+                self.cells[r][c].draw_move(self.cells[nr][nc], True)
+
+
     def __break_entrance_and_exit(self):
         self.__check_window()
         # see if we have multiple rows and columns
@@ -238,6 +267,26 @@ class Maze:
         self.cells[r][c].draw()
 
 
+    # check if there is a wall between the cells at (r1, c1) and (r2, c2)
+    def __has_wall(self, r1, c1, r2, c2):
+        # check if (r1, c1) and (r2, c2) are in bounds
+        if not self.__in_bounds(r1, c1) or not self.__in_bounds(r2, c2):
+            raise Exception("Cells must be in bounds")
+        # check if (r1, c1) and (r2, c2) are adjacent
+        if r1 == r2:
+            if c1 == c2 - 1:
+                return self.cells[r1][c1].has_right_wall and self.cells[r2][c2].has_left_wall
+            elif c1 == c2 + 1:
+                return self.cells[r1][c1].has_left_wall and self.cells[r2][c2].has_right_wall
+        elif c1 == c2:
+            if r1 == r2 - 1:
+                return self.cells[r1][c1].has_bottom_wall and self.cells[r2][c2].has_top_wall
+            elif r1 == r2 + 1:
+                return self.cells[r1][c1].has_top_wall and self.cells[r2][c2].has_bottom_wall
+        return False
+
+
+    # break the wall between the cells at (r1, c1) and (r2, c2)
     def __break_wall(self, r1, c1, r2, c2):
         # check if (r1, c1) and (r2, c2) are in bounds
         if not self.__in_bounds(r1, c1) or not self.__in_bounds(r2, c2):
@@ -297,12 +346,13 @@ class Maze:
 
 
 def main():
-    window = Window(800, 800)
+    window = Window(1200, 1200)
     maze = Maze(20, 20, 20, 20, "#B7B7B7", None, window)
     maze.create()
     maze.draw()
     maze.generate("#33AFFE")
+    maze.solve()
 
     window.wait_for_close()
 
-# main()
+main()
