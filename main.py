@@ -1,6 +1,7 @@
-from collections import deque
-import random
 from tkinter import *
+import argparse
+import random
+
 
 class Window:
     def __init__(self, width, height):
@@ -365,15 +366,44 @@ class Maze:
     def __in_bounds(self, r, c):
         return r in range(self.num_rows) and c in range(self.num_cols)
 
-# TODO: allow for customization within terminal
+
 def main():
+    # create a parser
+    parser = argparse.ArgumentParser(description="Generate and solve a maze")
+
+    # add arguments to the parser with default values
+    parser.add_argument(
+        "-r",
+        type=int,
+        default=12,
+        help="number of rows in the maze (default: 12)",
+    )
+    parser.add_argument(
+        "-c",
+        type=int,
+        default=12,
+        help="number of columns in the maze (default: 12)",
+    )
+    parser.add_argument(
+        "-color",
+        type=str,
+        default=None,
+        help="color of the maze generation (default: blue)",
+    )
+    # parse the arguments
+    args = parser.parse_args()
+
+    # access the arguments
+    num_rows = args.r
+    num_cols = args.c
+    generate_color1 = args.color
+
+    # create and run the maze
     window = Window(1300, 1300)
-    maze = Maze(20, 20, 12, 12, window)
+    maze = Maze(20, 20, num_rows, num_cols, window)
     maze.draw()
-
-    maze.generate()
+    maze.generate(generate_color1)
     maze.solve()
-
     window.wait_for_close()
 
 main()
