@@ -137,7 +137,7 @@ class Cell:
         )
 
         # wait for a bit, but adjust the time depending on the amount of cells in the maze
-        self.__window._Window__root.after(75)
+        # self.__window._Window__root.after(75)
         self.__window.redraw()
 
 
@@ -146,15 +146,13 @@ class Cell:
             raise Exception("Cell must have a window")
 
 
-#TODO: delete seed
 class Maze:
-    def __init__(self, x, y, num_rows, num_cols, color, seed=None, window=None):
+    def __init__(self, x, y, num_rows, num_cols, color, window=None):
         self.x = x
         self.y = y
         self.num_rows = num_rows
         self.num_cols = num_cols
         self.color = color
-        self.seed = seed
         self.cells = []
         self.__window = window
 
@@ -231,6 +229,7 @@ class Maze:
             if not self.cells[nr][nc].visited and not self.__has_wall(r, c, nr, nc):
 
                 self.cells[r][c].draw_move(self.cells[nr][nc], true_color, False, undo_color)
+                self.__window._Window__root.after(75)
                 if self.__solve_dfs(nr, nc, true_color, undo_color):
                     return True
                 self.cells[r][c].draw_move(self.cells[nr][nc], true_color, True, undo_color)
@@ -357,7 +356,7 @@ class Maze:
 # TODO: allow for customization within terminal
 def main():
     window = Window(1300, 1300)
-    maze = Maze(20, 20, 20, 20, "#B7B7B7", None, window)
+    maze = Maze(20, 20, 12, 12, "#B7B7B7", window)
     maze.create()
     maze.draw()
 
