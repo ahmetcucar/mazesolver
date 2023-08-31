@@ -147,14 +147,22 @@ class Cell:
 
 
 class Maze:
-    def __init__(self, x, y, num_rows, num_cols, color, window=None):
+    def __init__(self, x, y, num_rows, num_cols, window=None, base_color=None):
         self.x = x
         self.y = y
         self.num_rows = num_rows
         self.num_cols = num_cols
-        self.color = color
         self.cells = []
         self.__window = window
+
+        # colors
+        self.base_color = base_color if base_color else "#B7B7B7"
+        self.generate_color1 = "#33AFFE"
+        self.generate_color2 = "white"
+        self.solve_color1 = "red"
+        self.solve_color2 = "gray"
+
+        self.create()
 
 
     def create(self):
@@ -178,7 +186,7 @@ class Maze:
                         y,
                         x + cell_width,
                         y + cell_height,
-                        self.color,
+                        self.base_color,
                         self.__window,
                     )
                 )
@@ -191,27 +199,31 @@ class Maze:
         for r in range(len(self.cells)):
             for c in range(len(self.cells[r])):
                 self.cells[r][c].draw()
-                # self.__window._Window__root.after(5)
 
 
-    def generate(self, begin_color=None, end_color=None):
+    def generate(self, color1=None, color2=None):
         self.__check_window()
+
+        if color1:
+            self.generate_color1 = color1
+        if color2:
+            self.generate_color2 = color2
         self.__break_entrance_and_exit()
-        # break walls dfs starting from random point
         self.__break_walls_dfs(
             random.randint(0, self.num_rows - 1),
             random.randint(0, self.num_cols - 1),
-            begin_color if begin_color else "white",
-            end_color if end_color else "white",
-
         )
         self.__reset_visited()
 
 
     def solve(self, true_color=None, undo_color=None):
-        return self.__solve_dfs(0, 0, true_color, undo_color)
+        if true_color:
+            self.solve_color1 = true_color
+        if undo_color:
+            self.solve_color2 = undo_color
+        return self.__solve_dfs(0, 0)
 
-    def __solve_dfs(self, r, c, true_color=None, undo_color=None):
+    def __solve_dfs(self, r, c):
         if not self.__in_bounds(r, c):
             raise Exception("Cell must be in bounds")
 
@@ -221,18 +233,19 @@ class Maze:
         if r == self.num_rows - 1 and c == self.num_cols - 1:
             return True
 
+        # get all the neighbors of the cell and sort them by distance from the end
         neighbors = self.__get_neighbors(r, c)
-        # arrange them in order of closest to end
         neighbors.sort(key=lambda x: abs(x[0] - (self.num_rows - 1)) + abs(x[1] - (self.num_cols - 1)))
+
+        # enter neighbors that have not been visited and do not have a wall between them
         for neighbor in neighbors:
             nr, nc = neighbor
             if not self.cells[nr][nc].visited and not self.__has_wall(r, c, nr, nc):
-
-                self.cells[r][c].draw_move(self.cells[nr][nc], true_color, False, undo_color)
+                self.cells[r][c].draw_move(self.cells[nr][nc], self.solve_color1, False, self.solve_color2)
                 self.__window._Window__root.after(75)
-                if self.__solve_dfs(nr, nc, true_color, undo_color):
+                if self.__solve_dfs(nr, nc):
                     return True
-                self.cells[r][c].draw_move(self.cells[nr][nc], true_color, True, undo_color)
+                self.cells[r][c].draw_move(self.cells[nr][nc], self.solve_color1, True, self.solve_color2)
 
 
     def __break_entrance_and_exit(self):
@@ -246,7 +259,7 @@ class Maze:
 
 
     # generate a random maze using recursive backtracking
-    def __break_walls_dfs(self, r, c, begin_color, end_color):
+    def __break_walls_dfs(self, r, c):
         if not self.__in_bounds(r, c):
             raise Exception("Cell must be in bounds")
 
@@ -265,22 +278,22 @@ class Maze:
             nr, nc = neighbor
             if not self.cells[nr][nc].visited:
                 self.__break_wall(r, c, nr, nc)
-                self.cells[r][c].color = begin_color
-                self.cells[nr][nc].color = begin_color
+                self.cells[r][c].color = self.generate_color1
+                self.cells[nr][nc].color = self.generate_color1
                 self.cells[r][c].draw()
                 self.cells[nr][nc].draw()
-                self.__break_walls_dfs(nr, nc, begin_color, end_color)
+                self.__break_walls_dfs(nr, nc)
 
         # after all neighbors have been visited, change color back to white
-        self.cells[r][c].color = end_color
+        self.cells[r][c].color = self.generate_color2
         self.cells[r][c].draw()
 
 
     # check if there is a wall between the cells at (r1, c1) and (r2, c2)
     def __has_wall(self, r1, c1, r2, c2):
-        # check if (r1, c1) and (r2, c2) are in bounds
         if not self.__in_bounds(r1, c1) or not self.__in_bounds(r2, c2):
             raise Exception("Cells must be in bounds")
+
         # check if (r1, c1) and (r2, c2) are adjacent
         if r1 == r2:
             if c1 == c2 - 1:
@@ -297,7 +310,6 @@ class Maze:
 
     # break the wall between the cells at (r1, c1) and (r2, c2)
     def __break_wall(self, r1, c1, r2, c2):
-        # check if (r1, c1) and (r2, c2) are in bounds
         if not self.__in_bounds(r1, c1) or not self.__in_bounds(r2, c2):
             raise Exception("Cells must be in bounds")
 
@@ -322,9 +334,9 @@ class Maze:
                 self.cells[r2][c1].has_bottom_wall = False
 
 
+    # returns an array of tuples of the form (r, c)
+    # that represent the neighbors of the cell at (row, col)
     def __get_neighbors(self, row, col):
-        # returns an array of tuples of the form (row, col)
-        # that represent the neighbors of the cell at (row, col)
         neighbors = []
         if row > 0:
             neighbors.append((row - 1, col))
@@ -356,11 +368,10 @@ class Maze:
 # TODO: allow for customization within terminal
 def main():
     window = Window(1300, 1300)
-    maze = Maze(20, 20, 12, 12, "#B7B7B7", window)
-    maze.create()
+    maze = Maze(20, 20, 12, 12, window)
     maze.draw()
 
-    maze.generate("#33AFFE")
+    maze.generate()
     maze.solve()
 
     window.wait_for_close()
