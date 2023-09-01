@@ -12,7 +12,7 @@ cd mazesolver
 python3 main.py
 ```
 
-And viola! Enjoy watching! Keep reading for customization.
+And voila! Enjoy watching! Keep reading for customization.
 
 https://github.com/ahmetcucar/mazesolver/assets/103691809/4690efc0-94de-4a8b-9dea-7808a55a0d17
 
